@@ -23,3 +23,10 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+
+logging:
+  file:
+    name: logs/ms-inscripcion.log
+  level:
+    root: INFO
+    cl.plataforma_gimnasio: INFO

@@ -104,7 +104,6 @@ public class InscripcionService {
                 .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), r -> Mono.error(new ResourceNotFoundException("El plan con ID " + dto.getIdPlan() + " no existe.")))
                 .bodyToMono(PlanResponseDTO.class).block();
 
-        // CORREGIDO: Campos cruzados usando los metodos en concordancia con el DTO corregido
         inscripcion.setSedeInscripcion(dto.getSedeInscripcion());
         inscripcion.setEstadoInscripcion(dto.getEstadoInscripcion());
         inscripcion.setIdPlan(dto.getIdPlan());
