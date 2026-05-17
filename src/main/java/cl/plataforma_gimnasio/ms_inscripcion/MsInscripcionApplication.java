@@ -6,10 +6,10 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @EnableDiscoveryClient
 @SpringBootApplication
-public class MsInscripcionesApplication {
+public class MsInscripcionApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(MsInscripcionesApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(MsInscripcionApplication.class, args);
+    }
 
 }
