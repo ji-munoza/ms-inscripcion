@@ -1,4 +1,4 @@
-package cl.plataforma_gimnasio.ms_inscripciones;
+package cl.plataforma_gimnasio.ms_inscripcion;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
