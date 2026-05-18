@@ -4,6 +4,7 @@ import cl.plataforma_gimnasio.ms_inscripcion.dto.InscripcionRequestDTO;
 import cl.plataforma_gimnasio.ms_inscripcion.dto.InscripcionResponseDTO;
 import cl.plataforma_gimnasio.ms_inscripcion.dto.PlanResponseDTO;
 import cl.plataforma_gimnasio.ms_inscripcion.dto.SocioResponseDTO;
+import cl.plataforma_gimnasio.ms_inscripcion.dto.PagoResponseDTO;
 import cl.plataforma_gimnasio.ms_inscripcion.exception.ResourceNotFoundException;
 import cl.plataforma_gimnasio.ms_inscripcion.model.Inscripcion;
 import cl.plataforma_gimnasio.ms_inscripcion.repository.InscripcionRepository;
@@ -46,6 +47,7 @@ public class InscripcionService {
 
     public InscripcionResponseDTO guardar(InscripcionRequestDTO dto) {
         log.info("Iniciando registro de inscripcion en sede: {} para Socio ID: {}", dto.getSedeInscripcion(), dto.getIdSocio());
+
         log.info("Validando existencia del socio mediante WebClient...");
         SocioResponseDTO socio = webClientBuilder.build()
                 .get()
@@ -70,8 +72,20 @@ public class InscripcionService {
                 .bodyToMono(PlanResponseDTO.class)
                 .block();
 
-        log.info("Validaciones HTTP exitosas para Socio '{}-{}' y Plan '{}'. Procediendo a guardar.",
-                socio.getRutSocio(), socio.getDvSocio(), plan.getNombrePlan());
+        log.info("Validando existencia del pago mediante WebClient...");
+        PagoResponseDTO pago = webClientBuilder.build()
+                .get()
+                .uri("http://ms-pago/api/gimnasio/pagos/{id}", dto.getIdPago())
+                .retrieve()
+                .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> {
+                    log.error("Error WebClient: El Pago con ID {} no existe en ms-pago.", dto.getIdPago());
+                    return Mono.error(new ResourceNotFoundException("El pago con ID " + dto.getIdPago() + " no existe."));
+                })
+                .bodyToMono(PagoResponseDTO.class)
+                .block();
+
+        log.info("Validaciones HTTP exitosas para Socio '{}-{}', Plan '{}' y Pago ID '{}'. Procediendo a guardar.",
+                socio.getRutSocio(), socio.getDvSocio(), plan.getNombrePlan(), pago.getIdPago());
 
         Inscripcion inscripcion = new Inscripcion();
         inscripcion.setSedeInscripcion(dto.getSedeInscripcion());
@@ -96,6 +110,7 @@ public class InscripcionService {
                 });
 
         log.info("Validando IDs actualizados en servicios remotos...");
+
         webClientBuilder.build().get().uri("http://ms-socio/api/gimnasio/socios/{id}", dto.getIdSocio()).retrieve()
                 .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), r -> Mono.error(new ResourceNotFoundException("El socio con ID " + dto.getIdSocio() + " no existe.")))
                 .bodyToMono(SocioResponseDTO.class).block();
@@ -103,6 +118,10 @@ public class InscripcionService {
         webClientBuilder.build().get().uri("http://ms-plan/api/gimnasio/planes/{id}", dto.getIdPlan()).retrieve()
                 .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), r -> Mono.error(new ResourceNotFoundException("El plan con ID " + dto.getIdPlan() + " no existe.")))
                 .bodyToMono(PlanResponseDTO.class).block();
+
+        webClientBuilder.build().get().uri("http://ms-pago/api/gimnasio/pagos/{id}", dto.getIdPago()).retrieve()
+                .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), r -> Mono.error(new ResourceNotFoundException("El pago con ID " + dto.getIdPago() + " no existe.")))
+                .bodyToMono(PagoResponseDTO.class).block();
 
         inscripcion.setSedeInscripcion(dto.getSedeInscripcion());
         inscripcion.setEstadoInscripcion(dto.getEstadoInscripcion());
